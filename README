@@ -1,21 +1,36 @@
-﻿# YouTube Source Remover
+# Remove YouTube Share Identifier
 
-`index.js` is a Tampermonkey userscript for YouTube that patches the built-in share dialog behavior so copied links no longer include the `si` tracking parameter.
+A lightweight Tampermonkey userscript that enhances your privacy by automatically removing YouTube's tracking parameters from copied share links.
 
-## What it does
+Note: This project doesn't remove 
 
-- Matches all YouTube pages (`www.youtube.com`, `m.youtube.com`, `music.youtube.com`) so the script can stay active across SPA navigation.
-- Watches for YouTube’s `yt-copy-link-renderer` share dialog.
-- Updates the share input value in `input#share-url` to remove the `si` query parameter.
-- Patches the native `#copy-button` click behavior to copy the cleaned URL.
-- Falls back to YouTube’s original handler if clipboard access is blocked.
+## Overview
 
-## Why it exists
+When you use YouTube's built-in "Share" button, YouTube appends an `si` (Share Identifier) parameter to the URL. This parameter is used to track who originally shared the link and how it propagates across the internet. This script intercepts the copy action, strips the tracking parameter, and copies a clean, untracked link directly to your clipboard.
 
-This script makes shared YouTube links cleaner and more privacy-friendly by stripping the `si` parameter before copying. It also keeps the script active across internal YouTube navigation, which is important because YouTube is a single-page application.
+## Features
 
-## Notes
+* **Privacy First:** Automatically removes the `si` search parameter from all generated YouTube share links.
+* **Visual Confirmation:** Renames the standard YouTube copy button to **"Anti-Track Copy"** so you know the script is active and working.
+* **Seamless Integration:** Works transparently in the background. If native clipboard permissions are blocked by the browser, it gracefully falls back to YouTube's native copy behavior (while still sanitizing the visible input field).
+* **Broad Compatibility:** Actively monitors and applies to standard desktop YouTube, mobile YouTube, and YouTube Music.
+* **Dynamic Page Ready:** Utilizes mutation observers and intercepts YouTube's custom navigation events (`yt-navigate-finish`, `popstate`, `hashchange`) to ensure it works flawlessly with YouTube's Single Page Application (SPA) architecture.
 
-- The script uses a `MutationObserver` to detect the share dialog when it appears.
-- It also listens for route-change events like `yt-navigate-finish`, `popstate`, and `hashchange`.
-- The visible button text is updated to `Anti-Track Copy`.
+## Supported Sites
+
+* `*://www.youtube.com/*`
+* `*://m.youtube.com/*`
+* `*://music.youtube.com/*`
+
+## Installation
+
+1. Install a userscript manager extension for your web browser (such as **Tampermonkey**).
+- Chrome? May need to enable BOTH "developer mode" under extensions AND grant "users script" permission to Tampermonkey itself via extension menu. 
+2. Create a new userscript within your extension's dashboard.
+3. Copy the source code and paste it into the editor, replacing any default template code.
+4. Save the script.
+5. Refresh any open YouTube tabs for the changes to take effect. Open a video, click "Share," and look for the **Anti-Track Copy** button.
+
+## License
+
+This project is licensed under the **GPLv3** License.
