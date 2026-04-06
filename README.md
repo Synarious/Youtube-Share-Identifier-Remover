@@ -1,8 +1,8 @@
 # Remove YouTube Share Identifier
 
-A lightweight Tampermonkey userscript that enhances your privacy by automatically removing YouTube's tracking parameters from copied share links.
+A simple Tampermonkey userscript that addresses weakness in Adblockers, by removing YouTube's tracking parameters from the share / copy at timestamp button keeping its functionality. This project is meant to be paired with existing robust anti-tracking filters built into tools like Brave Browser (Shield) or Ublock Origin Lite. 
 
-Note: This project doesn't remove 
+Why? This was largely created to make my life easier, as someone who likes to share videos at specific timestamps to my clipboard via the "Share" modal on a video. I found Adblockers do not change the logic of pages themselves and thus left me at risk of sending tracking URLs by accident. 
 
 ## Overview
 
