@@ -8,6 +8,8 @@ Why? This was largely created to make my life easier, as someone who likes to sh
 
 When you use YouTube's built-in "Share" button, YouTube appends an `si` (Share Identifier) parameter to the URL. This parameter is used to track who originally shared the link and how it propagates across the internet. This script intercepts the copy action, strips the tracking parameter, and copies a clean, untracked link directly to your clipboard.
 
+<img width="450" height="457" alt="brave_jVdJqKDptv" src="https://github.com/user-attachments/assets/6bd478d4-2b12-4cd9-b244-98dad18cab62" />
+
 ## Features
 
 * **Privacy First:** Automatically removes the `si` search parameter from all generated YouTube share links.
