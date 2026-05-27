@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name            Remove YouTube Share Identifier
 // @namespace       https://www.syfusion.com/github
-// @version         1.3.0
+// @version         1.4.0
 // @description     Updates YouTube's share copy button so copied links omit the "si" parameter.
 // @match           *://www.youtube.com/*
 // @match           *://m.youtube.com/*
@@ -16,16 +16,21 @@
 
 (() => {
 	"use strict";
-	const PARAM = "si";
+	const PARAMS = ["si"];
 	const RENDERER_TAG = "yt-copy-link-renderer";
-	const PATCHED_ATTR = "data-ysr-patched";
 	const BUTTON_LABEL = "Anti-Track Copy";
+	const COPIED_LABEL = "Copied!";
+	const PATCHED = new WeakSet();
 	let lastUrl = location.href;
+	let pendingMutations = [];
+	let rafId = null;
 
 	function sanitize(raw) {
 		try {
 			const url = new URL(raw);
-			url.searchParams.delete(PARAM);
+			for (const param of PARAMS) {
+				url.searchParams.delete(param);
+			}
 			return url.toString();
 		} catch {
 			return raw;
@@ -44,7 +49,6 @@
 		const cleaned = sanitize(input.value);
 		if (cleaned !== input.value) {
 			input.value = cleaned;
-			input.setAttribute("value", cleaned);
 		}
 
 		return cleaned;
@@ -62,34 +66,37 @@
 	function inject(renderer) {
 		const buttonHost = renderer.querySelector("#copy-button");
 		if (!(buttonHost instanceof HTMLElement) || !buttonHost.parentNode) return;
-		if (buttonHost.hasAttribute(PATCHED_ATTR)) {
+		if (PATCHED.has(buttonHost)) {
 			syncShareInput(renderer);
 			syncButtonLabel(buttonHost);
 			return;
 		}
-		buttonHost.setAttribute(PATCHED_ATTR, "");
+		PATCHED.add(buttonHost);
 		syncShareInput(renderer);
 		syncButtonLabel(buttonHost);
-		let allowNativeCopy = false;
+		let copyTimeout = null;
 
 		buttonHost.addEventListener("click", async (event) => {
-			if (allowNativeCopy) {
-				allowNativeCopy = false;
-				return;
-			}
-
 			const cleaned = syncShareInput(renderer);
 			if (!cleaned) return;
 
-			event.preventDefault();
-			event.stopImmediatePropagation();
-
 			try {
 				await navigator.clipboard.writeText(cleaned);
+				event.preventDefault();
+				event.stopImmediatePropagation();
+
+				const labelNode = buttonHost.querySelector("yt-button-shape button, button, .yt-spec-button-shape-next__button-text-content, .yt-core-attributed-string");
+				if (labelNode instanceof HTMLElement) {
+					if (copyTimeout) clearTimeout(copyTimeout);
+					const origLabel = labelNode.textContent;
+					labelNode.textContent = COPIED_LABEL;
+					copyTimeout = setTimeout(() => {
+						labelNode.textContent = origLabel;
+						copyTimeout = null;
+					}, 1500);
+				}
 			} catch {
 				// Let the native handler run if clipboard access is blocked.
-				allowNativeCopy = true;
-				buttonHost.click();
 			}
 		}, true);
 	}
@@ -117,16 +124,24 @@
 		scanCurrentDocument();
 	}
 
+	function flushMutations() {
+		rafId = null;
+		const batch = pendingMutations;
+		pendingMutations = [];
+		for (const { addedNodes } of batch) {
+			for (const node of addedNodes) scan(node);
+		}
+	}
+
 	scanCurrentDocument();
 
 	new MutationObserver((mutations) => {
-		for (const { addedNodes } of mutations) {
-			for (const node of addedNodes) scan(node);
-		}
+		pendingMutations.push(...mutations);
+		if (rafId) cancelAnimationFrame(rafId);
+		rafId = requestAnimationFrame(flushMutations);
 	}).observe(document.documentElement, { childList: true, subtree: true });
 
 	window.addEventListener("yt-navigate-finish", handleRouteChange, true);
 	window.addEventListener("popstate", handleRouteChange, true);
 	window.addEventListener("hashchange", handleRouteChange, true);
-
 })();
